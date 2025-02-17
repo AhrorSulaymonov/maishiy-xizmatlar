@@ -39,6 +39,21 @@ export class UstaUpdate {
     await this.ustaService.onClickLocation(ctx);
   }
 
+  @Action(/^setTime_(.*)$/)
+  async onClickSetTime(@Ctx() ctx: Context) {
+    await this.ustaService.onClickSetTime(ctx);
+  }
+
+  @Action(/^endTime_(.*)$/)
+  async onClickEndTime(@Ctx() ctx: Context) {
+    await this.ustaService.onClickEndTime(ctx);
+  }
+
+  @Action(/^avgTimePerCustomer_(.*)$/)
+  async onClickAvgTimePerCustomer(@Ctx() ctx: Context) {
+    await this.ustaService.onClickAvgTimePerCustomer(ctx);
+  }
+
   @Action(/deleteMasterForm_+\d+/)
   async onClickDeleteMasterForm(@Ctx() ctx: Context) {
     await this.ustaService.onClickDeleteMasterForm(ctx);

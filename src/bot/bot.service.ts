@@ -174,10 +174,39 @@ export class BotService {
               workPlace.location = `${ctx.message.location.latitude},${ctx.message.location.longitude}`;
               workPlace.last_state = `start_time`;
               await workPlace.save();
-              await ctx.reply("Ish boshlash vaqtingizni kiriting", {
-                parse_mode: "HTML",
+
+              // Asosiy klaviaturani olib tashlash
+              await ctx.reply("Iltimos, ish boshlash vaqtini tanlang", {
                 ...Markup.removeKeyboard(),
               });
+
+              // Inline buttonlar uchun vaqt oralig‘i
+              const times = [
+                "6:00",
+                "6:30",
+                "7:00",
+                "7:30",
+                "8:00",
+                "8:30",
+                "9:00",
+              ];
+
+              // Har bir qatorda 2 ta bo‘lishi uchun massivni shakllantirish
+              const buttons = times.map((time) =>
+                Markup.button.callback(time, `setTime_${time}`)
+              );
+
+              // Har bir qatorda ikkita bo‘lishi uchun tugmalarni guruhlash
+              const keyboard = Markup.inlineKeyboard(
+                buttons.reduce((rows, button, index) => {
+                  if (index % 2 === 0) rows.push([button]);
+                  else rows[rows.length - 1].push(button);
+                  return rows;
+                }, [] as any[])
+              );
+
+              // Inline buttonlari bilan xabar yuborish
+              await ctx.reply("Ish boshlash vaqtingizni kiriting", keyboard);
             }
           }
         }
@@ -278,11 +307,6 @@ export class BotService {
                   .resize()
                   .oneTime(),
               });
-            } else if (workPlace.last_state == "start_time") {
-              workPlace.start_time = ctx.message.text;
-              workPlace.last_state = "end_time";
-              await workPlace.save();
-              await ctx.reply("Ish tugatish vaqtini kiriting");
             } else if (workPlace.last_state == "end_time") {
               workPlace.end_time = ctx.message.text;
               workPlace.last_state = "avg_time_per_customer";

@@ -127,6 +127,163 @@ export class UstaService {
     }
   }
 
+  async onClickSetTime(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"]; // callback_data ni olish
+      const selectedTime = contextAction.split("_")[1]; // "setTime_6:00" → ["set", "time", "6:00"]
+
+      const workPlace = await this.workPlaceModel.findOne({
+        where: { user_id },
+        order: [["id", "DESC"]],
+      });
+
+      if (!selectedTime) {
+        await ctx.reply("Xatolik: Vaqt tanlanmadi ❌");
+        return;
+      }
+
+      workPlace!.start_time = selectedTime;
+      workPlace!.last_state = `end_time`;
+      workPlace?.save();
+
+      const times = [
+        "16:00",
+        "16:30",
+        "17:00",
+        "17:30",
+        "18:00",
+        "18:30",
+        "19:00",
+        "19:30",
+        "20:00",
+      ];
+
+      // Har bir qatorda 2 ta bo‘lishi uchun massivni shakllantirish
+      const buttons = times.map((time) =>
+        Markup.button.callback(time, `endTime_${time}`)
+      );
+
+      // Har bir qatorda ikkita bo‘lishi uchun tugmalarni guruhlash
+      const keyboard = Markup.inlineKeyboard(
+        buttons.reduce((rows, button, index) => {
+          if (index % 2 === 0) rows.push([button]);
+          else rows[rows.length - 1].push(button);
+          return rows;
+        }, [] as any[])
+      );
+
+      // Inline buttonlari bilan xabar yuborish
+      await ctx.reply("Ish tugatish vaqtingizni kiriting", keyboard);
+    } catch (error) {
+      console.log("onClickSetTime err", error);
+    }
+  }
+
+  async onClickEndTime(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"]; // callback_data ni olish
+      const selectedTime = contextAction.split("_")[1]; // "endTime_16:00" → ["set", "time", "6:00"]
+
+      const workPlace = await this.workPlaceModel.findOne({
+        where: { user_id },
+        order: [["id", "DESC"]],
+      });
+
+      if (!selectedTime) {
+        await ctx.reply("Xatolik: Vaqt tanlanmadi ❌");
+        return;
+      }
+
+      workPlace!.end_time = selectedTime;
+      workPlace!.last_state = `avg_time_per_customer`;
+      workPlace?.save();
+
+      const times = ["15", "20", "30", "45", "60", "90"];
+
+      // Har bir qatorda 2 ta bo‘lishi uchun massivni shakllantirish
+      const buttons = times.map((time) =>
+        Markup.button.callback(time, `avgTimePerCustomer_${time}`)
+      );
+
+      // Har bir qatorda ikkita bo‘lishi uchun tugmalarni guruhlash
+      const keyboard = Markup.inlineKeyboard(
+        buttons.reduce((rows, button, index) => {
+          if (index % 2 === 0) rows.push([button]);
+          else rows[rows.length - 1].push(button);
+          return rows;
+        }, [] as any[])
+      );
+
+      // Inline buttonlari bilan xabar yuborish
+      await ctx.reply(
+        "har bir odamga o'rtacha necha minut sarflashizni kiriting",
+        keyboard
+      );
+    } catch (error) {
+      console.log("onClickEndTime err", error);
+    }
+  }
+
+  async onClickAvgTimePerCustomer(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"]; // callback_data ni olish
+      const selectedTime = contextAction.split("_")[1]; // "endTime_16:00" → ["set", "time", "6:00"]
+
+      const workPlace = await this.workPlaceModel.findOne({
+        where: { user_id },
+        order: [["id", "DESC"]],
+      });
+
+      if (!selectedTime) {
+        await ctx.reply("Xatolik: Vaqt tanlanmadi ❌");
+        return;
+      }
+
+      workPlace!.avg_time_per_customer = selectedTime;
+      workPlace!.last_state = `finish`;
+      workPlace?.save();
+
+      await ctx.replyWithHTML(
+        `<b>Usta ismi:</b> ${user!.name} \n` +
+          `<b>Telefon raqami:</b> ${user!.phone_number} \n` +
+          `<b>Ustaxona nomi:</b> ${workPlace!.name || "none"} \n` +
+          `<b>Manzili:</b> ${workPlace!.address || "none"} \n` +
+          `<b>Mo'ljal:</b> ${workPlace!.target || "none"} \n` +
+          `<b>Ish boshlanish vaqti:</b> ${workPlace!.start_time} \n` +
+          `<b>Ish tugash vaqti:</b> ${workPlace!.end_time} \n` +
+          `<b>Har bir mijoz uchun o'rtacha ketadigan vaqt:</b> ${workPlace!.avg_time_per_customer} \n`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Lokatsiyani ko'rish 📍",
+                  callback_data: `loc_${workPlace!.id}`,
+                },
+                {
+                  text: "BEKOR QILISH ❌",
+                  callback_data: `deleteMasterForm_${workPlace!.id}`,
+                },
+                {
+                  text: "Tasdiqlash ✅",
+                  callback_data: `confirmMasterForm_${workPlace!.id}`,
+                },
+              ],
+            ],
+          },
+        }
+      );
+    } catch (error) {
+      console.log("onClickEndTime err", error);
+    }
+  }
+
   async onClickDeleteMasterForm(ctx: Context) {
     try {
       const user_id = ctx.from?.id;
@@ -207,6 +364,7 @@ export class UstaService {
       console.log("onAddress err", error);
     }
   }
+
   async onClickConfirmMasterForm(ctx: Context) {
     try {
       const user_id = ctx.from?.id;
