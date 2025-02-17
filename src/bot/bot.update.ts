@@ -9,6 +9,9 @@ import {
   Update,
 } from "nestjs-telegraf";
 import { BotService } from "./bot.service";
+import { UseFilters, UseGuards } from "@nestjs/common";
+import { BotAdminGuard } from "../guards/bot.admin.guard";
+import { TelegrafExceptionFilter } from "../filters/telegraf-exception.filter";
 
 @Update()
 export class BotUpdate {
@@ -26,6 +29,13 @@ export class BotUpdate {
   @Command("stop")
   async onStop(@Ctx() ctx: Context) {
     await this.botService.onStop(ctx);
+  }
+
+  @UseGuards(BotAdminGuard)
+  @UseFilters(TelegrafExceptionFilter)
+  @Command("admin")
+  async onAdminCommand(@Ctx() ctx: Context) {
+    await this.botService.admin_menu(ctx, "Xush kelibsiz, Admin 👋");
   }
 
   @On("contact")

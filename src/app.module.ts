@@ -10,6 +10,7 @@ import { JobType } from "./bot/models/JobType.model";
 import { User } from "./bot/models/User.model";
 import { WorkPlace } from "./bot/models/workplace.model";
 import { Customer } from "./bot/models/customer.model";
+import { Time } from "./bot/models/Time.model";
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { Customer } from "./bot/models/customer.model";
       port: Number(process.env.POSTGRES_PORT),
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
-      models: [User, JobType, WorkPlace, Customer],
+      models: [User, JobType, WorkPlace, Customer, Time],
       autoLoadModels: true,
       sync: { alter: true },
       logging: false,

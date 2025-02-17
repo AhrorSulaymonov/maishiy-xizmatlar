@@ -39,6 +39,21 @@ export class UstaUpdate {
     await this.ustaService.onClickLocation(ctx);
   }
 
+  @Action(/deleteMasterForm_+\d+/)
+  async onClickDeleteMasterForm(@Ctx() ctx: Context) {
+    await this.ustaService.onClickDeleteMasterForm(ctx);
+  }
+
+  @Action(/confirmMasterForm_+\d+/)
+  async onClickConfirmMasterForm(@Ctx() ctx: Context) {
+    await this.ustaService.onClickConfirmMasterForm(ctx);
+  }
+
+  @Action(/checkAsMaster_+\d+/)
+  async onClickCheckAsMaster(@Ctx() ctx: Context) {
+    await this.ustaService.onClickCheckAsMaster(ctx);
+  }
+
   @Action(/jobtype_\d+/)
   async onJobTypeSelect(@Ctx() ctx: Context) {
     await this.ustaService.onJobTypeSelect(ctx);

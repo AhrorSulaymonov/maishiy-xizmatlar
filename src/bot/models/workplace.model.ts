@@ -25,8 +25,6 @@ export class WorkPlace extends Model<WorkPlace, IWorkPlaceCreationAttr> {
   })
   user_id: number | undefined;
 
-
-
   @Column({
     type: DataType.STRING,
   })
@@ -53,11 +51,6 @@ export class WorkPlace extends Model<WorkPlace, IWorkPlaceCreationAttr> {
   location: string | undefined;
 
   @Column({
-    type: DataType.STRING,
-  })
-  last_state: string | undefined;
-
-  @Column({
     type: DataType.TIME, // Ish boshlash vaqti
   })
   start_time: string | undefined;
@@ -71,4 +64,27 @@ export class WorkPlace extends Model<WorkPlace, IWorkPlaceCreationAttr> {
     type: DataType.INTEGER, // Har bir mijoz uchun o‘rtacha vaqt (daqiqa)
   })
   avg_time_per_customer: number | undefined;
+
+  @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  rating: number | undefined;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+  })
+  is_approved: boolean | undefined;
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+  })
+  is_shared: boolean | undefined;
+
+  @Column({
+    type: DataType.STRING,
+  })
+  last_state: string | undefined;
 }

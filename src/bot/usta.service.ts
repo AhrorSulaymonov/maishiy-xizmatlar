@@ -46,6 +46,7 @@ export class UstaService {
         });
       } else if (!user.status) {
         user.status = true;
+        user.role = "usta";
         await user.save();
         const jobTypes = await this.jobTypeModel.findAll();
         const buttons = jobTypes.map((job) => [
@@ -114,14 +115,140 @@ export class UstaService {
 
       const address_id = contextAction.split("_")[1];
       const address = await this.workPlaceModel.findByPk(address_id);
-      await ctx.deleteMessage(contextMessage?.message_id);
-      await ctx.deleteMessage(contextMessage?.message_id! - 1);
       // await ctx.deleteMessage(contextMessage?.message_id! - 2);
       // await ctx.deleteMessage(contextMessage?.message_id! - 3);
       //tekshir lokatsiyani
       await ctx.replyWithLocation(
         Number(address?.location?.split(",")[0]),
         Number(address?.location?.split(",")[1])
+      );
+    } catch (error) {
+      console.log("onAddress err", error);
+    }
+  }
+
+  async onClickDeleteMasterForm(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"];
+      const contextMessage = ctx.callbackQuery!["message"];
+      console.log(contextMessage);
+
+      const workPlace_id = contextAction.split("_")[1];
+      const workPlace = await this.workPlaceModel.destroy({
+        where: { id: workPlace_id },
+      });
+      user!.phone_number = "";
+      user!.status = false;
+      await user!.save();
+
+      await ctx.deleteMessage(contextMessage?.message_id);
+      await ctx.reply("Iltimos <b>Start</b> tugmasini bosing", {
+        parse_mode: "HTML",
+        ...Markup.keyboard(["/start"]).resize().oneTime(),
+      });
+    } catch (error) {
+      console.log("onAddress err", error);
+    }
+  }
+
+  async onClickCheckAsMaster(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"];
+      const contextMessage = ctx.callbackQuery!["message"];
+      console.log(contextMessage);
+
+      const workPlace_id = contextAction.split("_")[1];
+      const workPlace = await this.workPlaceModel.findByPk(workPlace_id);
+
+      await ctx.deleteMessage(contextMessage?.message_id);
+      if (workPlace!.is_approved) {
+        await ctx.reply("Admin sizni qabul qildi", {
+          parse_mode: "HTML",
+          ...Markup.removeKeyboard(),
+        });
+      } else {
+        await ctx.replyWithHTML(
+          `<b>Uzr admin hali sizni qabul qilmadi</b>\n` +
+            `<b>Usta ismi:</b> ${user!.name} \n` +
+            `<b>Telefon raqami:</b> ${user!.phone_number} \n` +
+            `<b>Ustaxona nomi:</b> ${workPlace!.name || "none"} \n` +
+            `<b>Manzili:</b> ${workPlace!.address || "none"} \n` +
+            `<b>Mo'ljal:</b> ${workPlace!.target || "none"} \n` +
+            `<b>Ish boshlanish vaqti:</b> ${workPlace!.start_time} \n` +
+            `<b>Ish tugash vaqti:</b> ${workPlace!.end_time} \n` +
+            `<b>Har bir mijoz uchun o'rtacha ketadigan vaqt:</b> ${workPlace!.avg_time_per_customer} \n`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Tekshirish",
+                    callback_data: `checkAsMaster_${workPlace!.id}`,
+                  },
+                  {
+                    text: "BEKOR QILISH ❌",
+                    callback_data: `deleteMasterForm_${workPlace!.id}`,
+                  },
+                  {
+                    text: "ADMIN BILAN BOG’LANISH ✅",
+                    callback_data: `confirmMasterForm_${workPlace!.id}`,
+                  },
+                ],
+              ],
+            },
+          }
+        );
+      }
+    } catch (error) {
+      console.log("onAddress err", error);
+    }
+  }
+  async onClickConfirmMasterForm(ctx: Context) {
+    try {
+      const user_id = ctx.from?.id;
+      const user = await this.userModel.findByPk(user_id);
+      const contextAction = ctx.callbackQuery!["data"];
+      const contextMessage = ctx.callbackQuery!["message"];
+      console.log(contextMessage);
+
+      const workPlace_id = contextAction.split("_")[1];
+      const workPlace = await this.workPlaceModel.findByPk(workPlace_id);
+      workPlace!.is_shared = true;
+      workPlace!.save();
+      await ctx.deleteMessage(contextMessage?.message_id);
+      await ctx.replyWithHTML(
+        `<b>Usta ismi:</b> ${user!.name} \n` +
+          `<b>Telefon raqami:</b> ${user!.phone_number} \n` +
+          `<b>Ustaxona nomi:</b> ${workPlace!.name || "none"} \n` +
+          `<b>Manzili:</b> ${workPlace!.address || "none"} \n` +
+          `<b>Mo'ljal:</b> ${workPlace!.target || "none"} \n` +
+          `<b>Ish boshlanish vaqti:</b> ${workPlace!.start_time} \n` +
+          `<b>Ish tugash vaqti:</b> ${workPlace!.end_time} \n` +
+          `<b>Har bir mijoz uchun o'rtacha ketadigan vaqt:</b> ${workPlace!.avg_time_per_customer} \n`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Tekshirish",
+                  callback_data: `checkAsMaster_${workPlace!.id}`,
+                },
+                {
+                  text: "BEKOR QILISH ❌",
+                  callback_data: `deleteMasterForm_${workPlace!.id}`,
+                },
+                {
+                  text: "ADMIN BILAN BOG’LANISH ✅",
+                  callback_data: `confirmMasterForm_${workPlace!.id}`,
+                },
+              ],
+            ],
+          },
+        }
       );
     } catch (error) {
       console.log("onAddress err", error);

@@ -126,7 +126,10 @@ export class BotService {
             user_id,
             last_state: "usta_name",
           });
-          await ctx.reply(`ismingizni kiriting`);
+          await ctx.reply(`ismingizni kiriting`, {
+            parse_mode: "HTML",
+            ...Markup.removeKeyboard(),
+          });
         } else if ((user.role = "mijoz")) {
           const customer = await this.customerModel.findOne({
             where: { user_id },
@@ -184,6 +187,19 @@ export class BotService {
     }
   }
 
+  async admin_menu(ctx: Context, menu_text = `<b>Admin menyusi</b>`) {
+    try {
+      await ctx.reply(menu_text, {
+        parse_mode: "HTML",
+        ...Markup.keyboard([["Xizmatlar", "Ustalar", "Mijozlar"]])
+          .oneTime()
+          .resize(),
+      });
+    } catch (error) {
+      console.log("Admin menyusida xatolik", error);
+    }
+  }
+
   async onText(ctx: Context) {
     try {
       if ("text" in ctx.message!) {
@@ -204,9 +220,12 @@ export class BotService {
           if (workPlace && workPlace.last_state !== "finish") {
             // usta_name
             if (workPlace.last_state == "usta_name") {
+              console.log("user.name:", ctx.message.text);
+
               user.name = ctx.message.text;
               workPlace.last_state = "name";
               await workPlace.save();
+              await user.save();
               await ctx.reply("Ustaxona nomini kiriting", {
                 parse_mode: "HTML",
                 ...Markup.inlineKeyboard([
@@ -293,8 +312,16 @@ export class BotService {
                     inline_keyboard: [
                       [
                         {
-                          text: "Lokatsiyani ko'rish",
+                          text: "Lokatsiyani ko'rish 📍",
                           callback_data: `loc_${workPlace.id}`,
+                        },
+                        {
+                          text: "BEKOR QILISH ❌",
+                          callback_data: `deleteMasterForm_${workPlace.id}`,
+                        },
+                        {
+                          text: "Tasdiqlash ✅",
+                          callback_data: `confirmMasterForm_${workPlace.id}`,
                         },
                       ],
                     ],

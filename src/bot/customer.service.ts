@@ -46,6 +46,7 @@ export class CustomerService {
         });
       } else if (!user.status) {
         user.status = true;
+        user.role = "mijoz";
         await user.save();
         await this.customerModel.create({
           user_id,
