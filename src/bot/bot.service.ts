@@ -9,7 +9,7 @@ import { JobType } from "./models/JobType.model";
 import { User } from "./models/User.model";
 import { WorkPlace } from "./models/workplace.model";
 import { Customer } from "./models/customer.model";
-import { where } from "sequelize";
+import { AdminService } from "./admin.service";
 
 @Injectable()
 export class BotService {
@@ -18,9 +18,9 @@ export class BotService {
     @InjectModel(User) private readonly userModel: typeof User,
     @InjectModel(WorkPlace) private readonly workPlaceModel: typeof WorkPlace,
     @InjectModel(Customer) private readonly customerModel: typeof Customer,
-    @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>
+    @InjectBot(BOT_NAME) private readonly bot: Telegraf<Context>,
+    private readonly adminService: AdminService
   ) {}
-
   async start(ctx: Context) {
     const user_id = ctx.from?.id;
     const user = await this.userModel.findByPk(user_id);
@@ -234,12 +234,38 @@ export class BotService {
       if ("text" in ctx.message!) {
         const user_id = ctx.from?.id;
         const user = await this.userModel.findByPk(user_id);
+        console.log("user_id", user_id, 5748326711, 5748326711 == user_id);
 
-        if (!user || !user.status) {
+        const salom = "salom";
+        if (user_id === 5748326711) {
+          const jobtype = await this.jobTypeModel.findOne({
+            where: { last_state: "updateName" },
+            order: [["id", "DESC"]],
+          });
+          if (jobtype) {
+            jobtype.name = ctx.message.text;
+            jobtype.last_state = "finish";
+            await jobtype.save();
+            const jobTypes = await this.jobTypeModel.findAll();
+            const buttons = jobTypes.map((job) => [
+              Markup.button.callback(`${job.name}`, `jobtypeToAdmin_${job.id}`),
+            ]);
+
+            buttons.push([
+              Markup.button.callback("Yangi Xizmat qo'shish", "addNewJobType"),
+            ]);
+
+            await ctx.reply("Xizmat turlarini tahrirlash uchun ustiga bosing", {
+              parse_mode: "HTML",
+              reply_markup: { inline_keyboard: buttons }, // ✅ To‘g‘ri format
+            });
+          }
+        } else if (!user || !user.status) {
           await ctx.reply(`Siz avval ro'yxatdan o'ting`, {
             parse_mode: "HTML",
             ...Markup.keyboard(["/start"]).resize(),
           });
+        } else if (user_id == 14518578925) {
         } else if (user.role == "usta") {
           const workPlace = await this.workPlaceModel.findOne({
             where: { user_id },
